@@ -1075,3 +1075,144 @@ end)
 Lib.Destroying:Connect(function()
     if heartbeatConn then heartbeatConn:Disconnect() end
 end)
+
+--// ===== UI IMPROVEMENTS (ADDED) ===== //-- 
+
+-- Toggle menu with U
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.U then
+        SettingsPanel.Visible = not SettingsPanel.Visible
+    end
+end)
+
+-- Title glow effect
+spawn(function()
+    while TitleBar and TitleBar.Parent do
+        TweenService:Create(TitleBar, TweenInfo.new(1), {
+            TextColor3 = Color3.fromRGB(255, 200, 50)
+        }):Play()
+        task.wait(1)
+        TweenService:Create(TitleBar, TweenInfo.new(1), {
+            TextColor3 = Color3.fromRGB(255, 150, 0)
+        }):Play()
+        task.wait(1)
+    end
+end)
+
+-- Hover effect function
+local function addHoverEffect(btn)
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    end)
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(22,22,22)
+    end)
+end
+
+-- Apply hover to buttons
+for _,b in pairs(buttons) do
+    addHoverEffect(b)
+end
+for _,b in pairs(tauntButtons) do
+    addHoverEffect(b)
+end
+
+-- Simple open animation for TitleBar
+TitleBar.Position = UDim2.new(0.5, -130, 0, -50)
+TweenService:Create(TitleBar, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+    Position = UDim2.new(0.5, -130, 0, 8)
+}):Play()
+
+
+
+--// ===== AUTO GRAB FIX ===== //--
+
+local function findNearestStealPrompt()
+    local c = player.Character
+    local root = c and c:FindFirstChild("HumanoidRootPart")
+    if not root then return nil end
+
+    local nearestPrompt = nil
+    local shortest = math.huge
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") 
+        and obj.Enabled 
+        and obj.ActionText == "Steal" then
+
+            local pos = getPromptPosition(obj)
+            if pos then
+                local dist = (root.Position - pos).Magnitude
+                if dist < shortest then
+                    shortest = dist
+                    nearestPrompt = obj
+                end
+            end
+        end
+    end
+
+    return nearestPrompt
+end
+
+-- Faster loop
+task.spawn(function()
+    while true do
+        if stealActive then
+            local prompt = findNearestStealPrompt()
+            if prompt then
+                for i = 1,3 do
+                    firePrompt(prompt)
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end)
+
+--// ===== KEYBIND SYSTEM (SETTINGS FIX) ===== //--
+
+local keybinds = {
+    ["autoright"] = Enum.KeyCode.C,
+    ["autoleft"] = Enum.KeyCode.Z,
+    ["Aimbot"] = Enum.KeyCode.X
+}
+
+local waitingForKey = nil
+
+local function bindKey(action)
+    waitingForKey = action
+end
+
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+
+    if waitingForKey then
+        keybinds[waitingForKey] = input.KeyCode
+        waitingForKey = nil
+        return
+    end
+
+    if input.KeyCode == keybinds["autoright"] then
+        buttons["autoright"]:MouseButton1Click()
+    elseif input.KeyCode == keybinds["autoleft"] then
+        buttons["autoleft"]:MouseButton1Click()
+    elseif input.KeyCode == keybinds["Aimbot"] then
+        buttons["Aimbot [X]"]:MouseButton1Click()
+    end
+end)
+
+-- Example: clicking gear icon enables rebind
+for name,btn in pairs(buttons) do
+    local gear = btn:FindFirstChildOfClass("TextLabel")
+    if gear then
+        gear.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if name == "autoright" then bindKey("autoright") end
+                if name == "autoleft" then bindKey("autoleft") end
+                if name == "Aimbot [X]" then bindKey("Aimbot") end
+            end
+        end)
+    end
+end
+
