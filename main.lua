@@ -2,6 +2,7 @@ local player = game.Players.LocalPlayer
 local coreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 if coreGui:FindFirstChild("MenufiyHub_UI") then
     coreGui.MenufiyHub_UI:Destroy()
@@ -77,9 +78,12 @@ local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 10)
 layout.Parent = scroll
 
-local speedValue = 16
-local speedEnabled = false
+local speedBoosted = false
+local boostSpeed = 16
+local originalWalkSpeed = 16
 local infJumpEnabled = false
+local lastUpdate = 0
+local updateCooldown = 0.1
 
 local function createSpeedFeature()
     local container = Instance.new("Frame")
@@ -113,7 +117,7 @@ local function createSpeedFeature()
     bar.Parent = sliderFrame
     Instance.new("UICorner", bar)
     local fill = Instance.new("Frame")
-    fill.Size = UDim2.new(0.1, 0, 1, 0)
+    fill.Size = UDim2.new(0, 0, 1, 0)
     fill.BackgroundColor3 = theme.ButtonActive
     fill.Parent = bar
     Instance.new("UICorner", fill)
@@ -126,16 +130,16 @@ local function createSpeedFeature()
     valLabel.TextSize = 12
     valLabel.Parent = sliderFrame
     btn.MouseButton1Click:Connect(function()
-        speedEnabled = not speedEnabled
-        btn.BackgroundColor3 = speedEnabled and theme.ButtonActive or theme.ButtonDefault
-        container.Size = speedEnabled and UDim2.new(1, -5, 0, 90) or UDim2.new(1, -5, 0, 35)
+        speedBoosted = not speedBoosted
+        btn.BackgroundColor3 = speedBoosted and theme.ButtonActive or theme.ButtonDefault
+        container.Size = speedBoosted and UDim2.new(1, -5, 0, 90) or UDim2.new(1, -5, 0, 35)
     end)
     local dragging = false
     local function updateSlider(input)
         local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
         fill.Size = UDim2.new(pos, 0, 1, 0)
-        speedValue = math.floor(16 + (pos * 184))
-        valLabel.Text = "Hiz: " .. tostring(speedValue)
+        boostSpeed = math.floor(16 + (pos * 184))
+        valLabel.Text = "Hiz: " .. tostring(boostSpeed)
     end
     bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true updateSlider(input) end
@@ -179,9 +183,9 @@ local function addUnload()
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = b
     b.MouseButton1Click:Connect(function()
-        speedEnabled = false
+        speedBoosted = false
         infJumpEnabled = false
-        if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = 16 end
+        if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = originalWalkSpeed end
         screenGui:Destroy()
     end)
 end
@@ -190,12 +194,17 @@ createSpeedFeature()
 addInfJump()
 addUnload()
 
-RunService.Stepped:Connect(function()
-    if speedEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.WalkSpeed = speedValue
-    elseif not speedEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
-        if player.Character.Humanoid.WalkSpeed ~= 16 then
-            player.Character.Humanoid.WalkSpeed = 16
+RunService.Heartbeat:Connect(function(deltaTime)
+    lastUpdate = lastUpdate + deltaTime
+    if lastUpdate >= updateCooldown then
+        lastUpdate = 0
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            local humanoid = player.Character.Humanoid
+            if speedBoosted then
+                humanoid.WalkSpeed = boostSpeed
+            else
+                humanoid.WalkSpeed = originalWalkSpeed
+            end
         end
     end
 end)
