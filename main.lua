@@ -29,24 +29,19 @@ toggleBtn.BackgroundColor3 = theme.MainBg
 toggleBtn.Image = "rbxassetid://6031094678"
 toggleBtn.Parent = screenGui
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 10)
-local btnStroke = Instance.new("UIStroke", toggleBtn)
-btnStroke.Color = theme.Border
-btnStroke.Thickness = 2
+Instance.new("UIStroke", toggleBtn).Color = theme.Border
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Size = UDim2.new(0, 280, 0, 420)
 mainFrame.Position = UDim2.new(0.5, -140, 0.5, -210)
 mainFrame.BackgroundColor3 = theme.MainBg
-mainFrame.BorderSizePixel = 0
 mainFrame.Visible = true
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 Instance.new("UICorner", mainFrame)
-local mainStroke = Instance.new("UIStroke", mainFrame)
-mainStroke.Color = theme.Border
-mainStroke.Thickness = 2
+Instance.new("UIStroke", mainFrame).Color = theme.Border
 
 toggleBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
@@ -66,18 +61,69 @@ scroll.Size = UDim2.new(1, -20, 1, -70)
 scroll.Position = UDim2.new(0, 10, 0, 55)
 scroll.BackgroundTransparency = 1
 scroll.CanvasSize = UDim2.new(0, 0, 0, 600)
-scroll.ScrollBarThickness = 2
+scroll.ScrollBarThickness = 0
 scroll.Parent = mainFrame
 local layout = Instance.new("UIListLayout", scroll)
 layout.Padding = UDim.new(0, 10)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local autoStealEnabled = false
 local speedBoosted = false
 local boostSpeed = 16
 local infJumpEnabled = false
+local autoStealEnabled = false
 
-local function makeBtn(name, order, callback)
+local function createSpeedFeature()
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -5, 0, 35)
+    container.BackgroundTransparency = 1
+    container.ClipsDescendants = true
+    container.LayoutOrder = 1
+    container.Parent = scroll
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = theme.ButtonDefault
+    btn.Text = "Speed Boost"
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextColor3 = theme.TextMain
+    btn.TextSize = 14
+    btn.Parent = container
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local sliderFrame = Instance.new("Frame", container)
+    sliderFrame.Size = UDim2.new(1, 0, 0, 45)
+    sliderFrame.Position = UDim2.new(0, 0, 0, 40)
+    sliderFrame.BackgroundColor3 = theme.SliderBg
+    Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
+    local bar = Instance.new("Frame", sliderFrame)
+    bar.Size = UDim2.new(0.8, 0, 0, 6)
+    bar.Position = UDim2.new(0.1, 0, 0.6, 0)
+    bar.BackgroundColor3 = theme.ButtonDefault
+    local fill = Instance.new("Frame", bar)
+    fill.Size = UDim2.new(0, 0, 1, 0)
+    fill.BackgroundColor3 = theme.ButtonActive
+    local valLabel = Instance.new("TextLabel", sliderFrame)
+    valLabel.Size = UDim2.new(1, 0, 0, 20)
+    valLabel.BackgroundTransparency = 1
+    valLabel.Text = "Hiz: 16"
+    valLabel.TextColor3 = theme.TextMain
+    valLabel.TextSize = 12
+    btn.MouseButton1Click:Connect(function()
+        speedBoosted = not speedBoosted
+        btn.BackgroundColor3 = speedBoosted and theme.ButtonActive or theme.ButtonDefault
+        container.Size = speedBoosted and UDim2.new(1, -5, 0, 90) or UDim2.new(1, -5, 0, 35)
+    end)
+    local dragging = false
+    local function updateSlider(input)
+        local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(pos, 0, 1, 0)
+        boostSpeed = math.floor(16 + (pos * 234))
+        valLabel.Text = "Hiz: " .. tostring(boostSpeed)
+    end
+    bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true updateSlider(input) end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+    UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
+end
+
+local function addBtn(name, order, callback)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(1, -5, 0, 35)
     b.BackgroundColor3 = theme.ButtonDefault
@@ -88,75 +134,18 @@ local function makeBtn(name, order, callback)
     b.LayoutOrder = order
     b.Parent = scroll
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    
     local toggled = false
     b.MouseButton1Click:Connect(function()
         toggled = not toggled
         b.BackgroundColor3 = toggled and theme.ButtonActive or theme.ButtonDefault
         callback(toggled)
     end)
-    return b
 end
 
--- 1. SPEED (ORDER 1)
-local container = Instance.new("Frame")
-container.Size = UDim2.new(1, -5, 0, 35)
-container.BackgroundTransparency = 1
-container.ClipsDescendants = true
-container.LayoutOrder = 1
-container.Parent = scroll
-local sBtn = Instance.new("TextButton")
-sBtn.Size = UDim2.new(1, 0, 0, 35)
-sBtn.BackgroundColor3 = theme.ButtonDefault
-sBtn.Text = "Speed Boost"
-sBtn.Font = Enum.Font.GothamMedium
-sBtn.TextColor3 = theme.TextMain
-sBtn.TextSize = 14
-sBtn.Parent = container
-Instance.new("UICorner", sBtn).CornerRadius = UDim.new(0, 6)
-local sliderFrame = Instance.new("Frame", container)
-sliderFrame.Size = UDim2.new(1, 0, 0, 45)
-sliderFrame.Position = UDim2.new(0, 0, 0, 40)
-sliderFrame.BackgroundColor3 = theme.SliderBg
-Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
-local bar = Instance.new("Frame", sliderFrame)
-bar.Size = UDim2.new(0.8, 0, 0, 6)
-bar.Position = UDim2.new(0.1, 0, 0.6, 0)
-bar.BackgroundColor3 = theme.ButtonDefault
-local fill = Instance.new("Frame", bar)
-fill.Size = UDim2.new(0, 0, 1, 0)
-fill.BackgroundColor3 = theme.ButtonActive
-local valLabel = Instance.new("TextLabel", sliderFrame)
-valLabel.Size = UDim2.new(1, 0, 0, 20)
-valLabel.BackgroundTransparency = 1
-valLabel.Text = "Hiz: 16"
-valLabel.TextColor3 = theme.TextMain
-valLabel.TextSize = 12
+createSpeedFeature()
+addBtn("Infinity Jump", 2, function(v) infJumpEnabled = v end)
+addBtn("Auto Steal", 3, function(v) autoStealEnabled = v end)
 
-sBtn.MouseButton1Click:Connect(function()
-    speedBoosted = not speedBoosted
-    sBtn.BackgroundColor3 = speedBoosted and theme.ButtonActive or theme.ButtonDefault
-    container.Size = speedBoosted and UDim2.new(1, -5, 0, 90) or UDim2.new(1, -5, 0, 35)
-end)
-
-local dragging = false
-local function updateSlider(input)
-    local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-    fill.Size = UDim2.new(pos, 0, 1, 0)
-    boostSpeed = math.floor(16 + (pos * 234))
-    valLabel.Text = "Hiz: " .. tostring(boostSpeed)
-end
-bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true updateSlider(input) end end)
-UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
-
--- 2. INF JUMP (ORDER 2)
-makeBtn("Infinity Jump", 2, function(v) infJumpEnabled = v end)
-
--- 3. AUTO STEAL (ORDER 3)
-makeBtn("Auto Steal", 3, function(v) autoStealEnabled = v end)
-
--- 4. UNLOAD (ORDER 10)
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(1, -5, 0, 35)
 closeBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
@@ -173,7 +162,6 @@ closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- LOOPLAR
 RunService.Stepped:Connect(function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = speedBoosted and boostSpeed or 16
