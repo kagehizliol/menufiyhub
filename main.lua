@@ -1,6 +1,7 @@
--- MENUFİY HUB - CLASSIC PURPLE EDITION (REVERTED)
+-- MENUFİY HUB - INFINITY JUMP & REVERTED DESIGN
 local player = game.Players.LocalPlayer
 local coreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
 
 -- Eski sürümü temizle
 if coreGui:FindFirstChild("MenufiyHub_UI") then
@@ -21,13 +22,13 @@ local theme = {
     TextMain = Color3.fromRGB(255, 255, 255)
 }
 
--- 1. AÇMA/KAPAMA TUŞU (M Logosu)
+-- 1. AÇMA/KAPAMA TUŞU (Senin istediğin ikon ile)
 local toggleBtn = Instance.new("ImageButton")
 toggleBtn.Name = "Toggle"
 toggleBtn.Size = UDim2.new(0, 50, 0, 50)
-toggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0) -- Sol orta kısım
+toggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0)
 toggleBtn.BackgroundColor3 = theme.MainBg
-toggleBtn.Image = "rbxassetid://16027471131" -- M Logosun ID'si
+toggleBtn.Image = "rbxassetid://6031094678" -- Hazır menü çizgileri ikonu
 toggleBtn.Parent = screenGui
 
 local btnCorner = Instance.new("UICorner")
@@ -70,7 +71,7 @@ title.TextColor3 = theme.TextMain
 title.TextSize = 20
 title.Parent = mainFrame
 
--- 4. ÖZELLİKLER LİSTESİ (Scrolling)
+-- 4. ÖZELLİKLER LİSTESİ
 local scroll = Instance.new("ScrollingFrame")
 scroll.Size = UDim2.new(1, -20, 1, -60)
 scroll.Position = UDim2.new(0, 10, 0, 50)
@@ -106,15 +107,33 @@ local function addBtn(name, callback)
     end)
 end
 
--- ÖZELLİKLER (İstediğin gibi artırabilirsin)
-addBtn("Auto Left", function(v) print("Left:", v) end)
-addBtn("Auto Right", function(v) print("Right:", v) end)
+-- ==========================================
+-- ÖZELLİKLER
+-- ==========================================
+
+-- INFINITY JUMP MANTIĞI
+local infJumpEnabled = false
+UserInputService.JumpRequest:Connect(function()
+    if infJumpEnabled then
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.Velocity = Vector3.new(hrp.Velocity.X, 50, hrp.Velocity.Z)
+        end
+    end
+end)
+
+-- BUTONLAR
+addBtn("Infinity Jump", function(v)
+    infJumpEnabled = v
+end)
+
 addBtn("Speed Boost", function(v) 
     player.Character.Humanoid.WalkSpeed = v and 60 or 16 
 end)
+
 addBtn("Auto Steal", function(v) print("Steal:", v) end)
-addBtn("Bat Aimbot", function(v) print("Aimbot:", v) end)
 addBtn("Galaxy Mode", function(v) print("Galaxy:", v) end)
 addBtn("Anti Ragdoll", function(v) print("AntiRag:", v) end)
 
-print("Eski Menü Tasarımı (Mor) Yüklendi!")
+print("Menufiy Hub: Infinity Jump eklendi!")
