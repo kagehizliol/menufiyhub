@@ -21,6 +21,7 @@ local theme = {
     TextMain = Color3.fromRGB(255, 255, 255)
 }
 
+-- Toggle Button
 local toggleBtn = Instance.new("ImageButton")
 toggleBtn.Name = "Toggle"
 toggleBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -91,7 +92,7 @@ local function addBtn(name, order, callback)
     end)
 end
 
--- SPEED
+-- SPEED FEATURE
 local container = Instance.new("Frame")
 container.Size = UDim2.new(1, -5, 0, 35)
 container.BackgroundTransparency = 1
@@ -142,7 +143,7 @@ UserInputService.InputEnded:Connect(function(input) if input.UserInputType == En
 UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
 
 addBtn("Infinity Jump", 2, function(v) infJumpEnabled = v end)
-addBtn("Safe Auto Steal", 3, function(v) autoStealEnabled = v end)
+addBtn("Proximity Stealer", 3, function(v) autoStealEnabled = v end)
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(1, -5, 0, 35)
@@ -160,6 +161,7 @@ closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
+-- MAIN LOOP
 RunService.Stepped:Connect(function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = speedBoosted and boostSpeed or 16
@@ -167,18 +169,22 @@ RunService.Stepped:Connect(function()
     
     if autoStealEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local myPos = player.Character.HumanoidRootPart.Position
+        
+        -- Sadece yakındaki ProximityPrompt'ları ateşle
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("ProximityPrompt") then
-                local dist = (v.Parent:IsA("Model") and v.Parent.PrimaryPart and (v.Parent.PrimaryPart.Position - myPos).Magnitude) or (v.Parent:IsA("BasePart") and (v.Parent.Position - myPos).Magnitude) or 100
-                if dist < 12 then -- Sadece 12 birim yanındakileri al
-                    if v.Parent.Name:lower():find("brainrot") or v.ObjectText:lower():find("brainrot") or v.ActionText:lower():find("brainrot") then
+                local parentPart = v.Parent:IsA("BasePart") and v.Parent or (v.Parent:IsA("Model") and v.Parent.PrimaryPart)
+                if parentPart then
+                    local distance = (parentPart.Position - myPos).Magnitude
+                    if distance < 10 then -- 10 birim mesafe (dibindeyken)
                         fireproximityprompt(v)
                     end
                 end
             elseif v:IsA("TouchTransmitter") then
                 local part = v.Parent
-                if part:IsA("BasePart") and (part.Position - myPos).Magnitude < 12 then
-                    if part.Name:lower():find("brainrot") then
+                if part:IsA("BasePart") then
+                    local distance = (part.Position - myPos).Magnitude
+                    if distance < 7 then -- Dokunma için daha yakın mesafe
                         firetouchinterest(player.Character.HumanoidRootPart, part, 0)
                         firetouchinterest(player.Character.HumanoidRootPart, part, 1)
                     end
