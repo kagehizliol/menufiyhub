@@ -75,10 +75,9 @@ layout.SortOrder = Enum.SortOrder.LayoutOrder
 local autoStealEnabled = false
 local speedBoosted = false
 local boostSpeed = 16
-local originalWalkSpeed = 16
 local infJumpEnabled = false
 
-local function addBtn(name, callback, order)
+local function makeBtn(name, order, callback)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(1, -5, 0, 35)
     b.BackgroundColor3 = theme.ButtonDefault
@@ -96,9 +95,10 @@ local function addBtn(name, callback, order)
         b.BackgroundColor3 = toggled and theme.ButtonActive or theme.ButtonDefault
         callback(toggled)
     end)
+    return b
 end
 
--- 1. SPEED BOOST (SLIDER ILE)
+-- 1. SPEED (ORDER 1)
 local container = Instance.new("Frame")
 container.Size = UDim2.new(1, -5, 0, 35)
 container.BackgroundTransparency = 1
@@ -114,11 +114,10 @@ sBtn.TextColor3 = theme.TextMain
 sBtn.TextSize = 14
 sBtn.Parent = container
 Instance.new("UICorner", sBtn).CornerRadius = UDim.new(0, 6)
-local sliderFrame = Instance.new("Frame")
+local sliderFrame = Instance.new("Frame", container)
 sliderFrame.Size = UDim2.new(1, 0, 0, 45)
 sliderFrame.Position = UDim2.new(0, 0, 0, 40)
 sliderFrame.BackgroundColor3 = theme.SliderBg
-sliderFrame.Parent = container
 Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
 local bar = Instance.new("Frame", sliderFrame)
 bar.Size = UDim2.new(0.8, 0, 0, 6)
@@ -151,10 +150,13 @@ bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputT
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
 
--- 2. DİĞER BUTONLAR
-addBtn("Infinity Jump", function(v) infJumpEnabled = v end, 2)
-addBtn("Auto Steal", function(v) autoStealEnabled = v end, 3)
+-- 2. INF JUMP (ORDER 2)
+makeBtn("Infinity Jump", 2, function(v) infJumpEnabled = v end)
 
+-- 3. AUTO STEAL (ORDER 3)
+makeBtn("Auto Steal", 3, function(v) autoStealEnabled = v end)
+
+-- 4. UNLOAD (ORDER 10)
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(1, -5, 0, 35)
 closeBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
@@ -174,8 +176,7 @@ end)
 -- LOOPLAR
 RunService.Stepped:Connect(function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
-        local hum = player.Character.Humanoid
-        hum.WalkSpeed = speedBoosted and boostSpeed or 16
+        player.Character.Humanoid.WalkSpeed = speedBoosted and boostSpeed or 16
     end
     if autoStealEnabled then
         for _, v in pairs(workspace:GetDescendants()) do
