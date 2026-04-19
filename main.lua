@@ -72,57 +72,6 @@ local boostSpeed = 16
 local infJumpEnabled = false
 local autoStealEnabled = false
 
-local function createSpeedFeature()
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -5, 0, 35)
-    container.BackgroundTransparency = 1
-    container.ClipsDescendants = true
-    container.LayoutOrder = 1
-    container.Parent = scroll
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 35)
-    btn.BackgroundColor3 = theme.ButtonDefault
-    btn.Text = "Speed Boost"
-    btn.Font = Enum.Font.GothamMedium
-    btn.TextColor3 = theme.TextMain
-    btn.TextSize = 14
-    btn.Parent = container
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    local sliderFrame = Instance.new("Frame", container)
-    sliderFrame.Size = UDim2.new(1, 0, 0, 45)
-    sliderFrame.Position = UDim2.new(0, 0, 0, 40)
-    sliderFrame.BackgroundColor3 = theme.SliderBg
-    Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
-    local bar = Instance.new("Frame", sliderFrame)
-    bar.Size = UDim2.new(0.8, 0, 0, 6)
-    bar.Position = UDim2.new(0.1, 0, 0.6, 0)
-    bar.BackgroundColor3 = theme.ButtonDefault
-    local fill = Instance.new("Frame", bar)
-    fill.Size = UDim2.new(0, 0, 1, 0)
-    fill.BackgroundColor3 = theme.ButtonActive
-    local valLabel = Instance.new("TextLabel", sliderFrame)
-    valLabel.Size = UDim2.new(1, 0, 0, 20)
-    valLabel.BackgroundTransparency = 1
-    valLabel.Text = "Hiz: 16"
-    valLabel.TextColor3 = theme.TextMain
-    valLabel.TextSize = 12
-    btn.MouseButton1Click:Connect(function()
-        speedBoosted = not speedBoosted
-        btn.BackgroundColor3 = speedBoosted and theme.ButtonActive or theme.ButtonDefault
-        container.Size = speedBoosted and UDim2.new(1, -5, 0, 90) or UDim2.new(1, -5, 0, 35)
-    end)
-    local dragging = false
-    local function updateSlider(input)
-        local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-        fill.Size = UDim2.new(pos, 0, 1, 0)
-        boostSpeed = math.floor(16 + (pos * 234))
-        valLabel.Text = "Hiz: " .. tostring(boostSpeed)
-    end
-    bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true updateSlider(input) end end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-    UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
-end
-
 local function addBtn(name, order, callback)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(1, -5, 0, 35)
@@ -142,9 +91,58 @@ local function addBtn(name, order, callback)
     end)
 end
 
-createSpeedFeature()
+-- SPEED
+local container = Instance.new("Frame")
+container.Size = UDim2.new(1, -5, 0, 35)
+container.BackgroundTransparency = 1
+container.ClipsDescendants = true
+container.LayoutOrder = 1
+container.Parent = scroll
+local sBtn = Instance.new("TextButton")
+sBtn.Size = UDim2.new(1, 0, 0, 35)
+sBtn.BackgroundColor3 = theme.ButtonDefault
+sBtn.Text = "Speed Boost"
+sBtn.Font = Enum.Font.GothamMedium
+sBtn.TextColor3 = theme.TextMain
+sBtn.TextSize = 14
+sBtn.Parent = container
+Instance.new("UICorner", sBtn).CornerRadius = UDim.new(0, 6)
+local sliderFrame = Instance.new("Frame", container)
+sliderFrame.Size = UDim2.new(1, 0, 0, 45)
+sliderFrame.Position = UDim2.new(0, 0, 0, 40)
+sliderFrame.BackgroundColor3 = theme.SliderBg
+Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
+local bar = Instance.new("Frame", sliderFrame)
+bar.Size = UDim2.new(0.8, 0, 0, 6)
+bar.Position = UDim2.new(0.1, 0, 0.6, 0)
+bar.BackgroundColor3 = theme.ButtonDefault
+local fill = Instance.new("Frame", bar)
+fill.Size = UDim2.new(0, 0, 1, 0)
+fill.BackgroundColor3 = theme.ButtonActive
+local valLabel = Instance.new("TextLabel", sliderFrame)
+valLabel.Size = UDim2.new(1, 0, 0, 20)
+valLabel.BackgroundTransparency = 1
+valLabel.Text = "Hiz: 16"
+valLabel.TextColor3 = theme.TextMain
+valLabel.TextSize = 12
+sBtn.MouseButton1Click:Connect(function()
+    speedBoosted = not speedBoosted
+    sBtn.BackgroundColor3 = speedBoosted and theme.ButtonActive or theme.ButtonDefault
+    container.Size = speedBoosted and UDim2.new(1, -5, 0, 90) or UDim2.new(1, -5, 0, 35)
+end)
+local dragging = false
+local function updateSlider(input)
+    local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+    fill.Size = UDim2.new(pos, 0, 1, 0)
+    boostSpeed = math.floor(16 + (pos * 234))
+    valLabel.Text = "Hiz: " .. tostring(boostSpeed)
+end
+bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true updateSlider(input) end end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
+
 addBtn("Infinity Jump", 2, function(v) infJumpEnabled = v end)
-addBtn("Auto Steal", 3, function(v) autoStealEnabled = v end)
+addBtn("Auto Steal (Brainrot)", 3, function(v) autoStealEnabled = v end)
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(1, -5, 0, 35)
@@ -168,8 +166,9 @@ RunService.Stepped:Connect(function()
     end
     if autoStealEnabled then
         for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ProximityPrompt") then fireproximityprompt(v)
-            elseif v:IsA("TouchTransmitter") then
+            if v:IsA("ProximityPrompt") and (v.Parent.Name:lower():find("brainrot") or v.ObjectText:lower():find("brainrot")) then
+                fireproximityprompt(v)
+            elseif v:IsA("TouchTransmitter") and v.Parent.Name:lower():find("brainrot") then
                 firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 0)
                 firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 1)
             end
