@@ -77,10 +77,29 @@ local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 10)
 layout.Parent = scroll
 
+local autoStealEnabled = false
 local speedBoosted = false
 local boostSpeed = 16
 local originalWalkSpeed = 16
 local infJumpEnabled = false
+
+local function createAutoSteal()
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -5, 0, 35)
+    b.BackgroundColor3 = theme.ButtonDefault
+    b.Text = "Auto Steal"
+    b.Font = Enum.Font.GothamMedium
+    b.TextColor3 = theme.TextMain
+    b.TextSize = 14
+    b.Parent = scroll
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = b
+    b.MouseButton1Click:Connect(function()
+        autoStealEnabled = not autoStealEnabled
+        b.BackgroundColor3 = autoStealEnabled and theme.ButtonActive or theme.ButtonDefault
+    end)
+end
 
 local function createSpeedFeature()
     local container = Instance.new("Frame")
@@ -180,6 +199,7 @@ local function addUnload()
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = b
     b.MouseButton1Click:Connect(function()
+        autoStealEnabled = false
         speedBoosted = false
         infJumpEnabled = false
         if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = originalWalkSpeed end
@@ -187,6 +207,7 @@ local function addUnload()
     end)
 end
 
+createAutoSteal()
 createSpeedFeature()
 addInfJump()
 addUnload()
@@ -197,8 +218,17 @@ RunService.Stepped:Connect(function()
         if speedBoosted then
             hum.WalkSpeed = boostSpeed
         else
-            if hum.WalkSpeed ~= originalWalkSpeed then
-                hum.WalkSpeed = originalWalkSpeed
+            if hum.WalkSpeed ~= originalWalkSpeed then hum.WalkSpeed = originalWalkSpeed end
+        end
+    end
+    
+    if autoStealEnabled then
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                fireproximityprompt(v)
+            elseif v:IsA("TouchTransmitter") then
+                firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 0)
+                firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 1)
             end
         end
     end
