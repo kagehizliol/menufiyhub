@@ -72,6 +72,7 @@ local speedBoosted = false
 local boostSpeed = 16
 local infJumpEnabled = false
 local autoStealEnabled = false
+local lastStealTime = 0
 
 local function addBtn(name, order, callback)
     local b = Instance.new("TextButton")
@@ -92,7 +93,7 @@ local function addBtn(name, order, callback)
     end)
 end
 
--- SPEED FEATURE
+-- Speed Boost
 local container = Instance.new("Frame")
 container.Size = UDim2.new(1, -5, 0, 35)
 container.BackgroundTransparency = 1
@@ -135,7 +136,7 @@ local dragging = false
 local function updateSlider(input)
     local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
     fill.Size = UDim2.new(pos, 0, 1, 0)
-    boostSpeed = math.floor(16 + (pos * 234))
+    boostSpeed = math.floor(16 + (pos * 184))
     valLabel.Text = "Hiz: " .. tostring(boostSpeed)
 end
 bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true updateSlider(input) end end)
@@ -143,7 +144,7 @@ UserInputService.InputEnded:Connect(function(input) if input.UserInputType == En
 UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
 
 addBtn("Infinity Jump", 2, function(v) infJumpEnabled = v end)
-addBtn("Proximity Stealer", 3, function(v) autoStealEnabled = v end)
+addBtn("Insta Stealer (Anti-Ban)", 3, function(v) autoStealEnabled = v end)
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(1, -5, 0, 35)
@@ -161,32 +162,36 @@ closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- MAIN LOOP
+-- Main Loops
 RunService.Stepped:Connect(function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = speedBoosted and boostSpeed or 16
     end
-    
+end)
+
+RunService.Heartbeat:Connect(function()
     if autoStealEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local myPos = player.Character.HumanoidRootPart.Position
-        
-        -- Sadece yakındaki ProximityPrompt'ları ateşle
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ProximityPrompt") then
-                local parentPart = v.Parent:IsA("BasePart") and v.Parent or (v.Parent:IsA("Model") and v.Parent.PrimaryPart)
-                if parentPart then
-                    local distance = (parentPart.Position - myPos).Magnitude
-                    if distance < 10 then -- 10 birim mesafe (dibindeyken)
-                        fireproximityprompt(v)
+        local now = tick()
+        if now - lastStealTime >= 0.1 then -- Saniyede 10 kez tarar (Anti-cheat bypass)
+            lastStealTime = now
+            local myPos = player.Character.HumanoidRootPart.Position
+            
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("ProximityPrompt") then
+                    local part = v.Parent:IsA("BasePart") and v.Parent or (v.Parent:IsA("Model") and v.Parent.PrimaryPart)
+                    if part then
+                        local dist = (part.Position - myPos).Magnitude
+                        if dist < 15 then
+                            -- Bekleme süresini bypass et
+                            v.HoldDuration = 0
+                            fireproximityprompt(v)
+                        end
                     end
-                end
-            elseif v:IsA("TouchTransmitter") then
-                local part = v.Parent
-                if part:IsA("BasePart") then
-                    local distance = (part.Position - myPos).Magnitude
-                    if distance < 7 then -- Dokunma için daha yakın mesafe
-                        firetouchinterest(player.Character.HumanoidRootPart, part, 0)
-                        firetouchinterest(player.Character.HumanoidRootPart, part, 1)
+                elseif v:IsA("TouchTransmitter") then
+                    local p = v.Parent
+                    if p:IsA("BasePart") and (p.Position - myPos).Magnitude < 8 then
+                        firetouchinterest(player.Character.HumanoidRootPart, p, 0)
+                        firetouchinterest(player.Character.HumanoidRootPart, p, 1)
                     end
                 end
             end
