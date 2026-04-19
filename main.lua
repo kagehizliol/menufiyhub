@@ -1,4 +1,4 @@
--- MENUFİY HUB - INFINITY JUMP & REVERTED DESIGN
+-- MENUFİY HUB - ADVANCED SPEED & INF JUMP
 local player = game.Players.LocalPlayer
 local coreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
@@ -11,7 +11,6 @@ end
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "MenufiyHub_UI"
 screenGui.Parent = coreGui
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- TEMA RENKLERİ
 local theme = {
@@ -19,22 +18,20 @@ local theme = {
     Border = Color3.fromRGB(100, 30, 200),
     ButtonDefault = Color3.fromRGB(30, 0, 60),
     ButtonActive = Color3.fromRGB(120, 50, 220),
+    SliderBg = Color3.fromRGB(45, 10, 80),
     TextMain = Color3.fromRGB(255, 255, 255)
 }
 
--- 1. AÇMA/KAPAMA TUŞU (Senin istediğin ikon ile)
+-- 1. AÇMA/KAPAMA TUŞU
 local toggleBtn = Instance.new("ImageButton")
-toggleBtn.Name = "Toggle"
 toggleBtn.Size = UDim2.new(0, 50, 0, 50)
 toggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0)
 toggleBtn.BackgroundColor3 = theme.MainBg
-toggleBtn.Image = "rbxassetid://6031094678" -- Hazır menü çizgileri ikonu
+toggleBtn.Image = "rbxassetid://6031094678"
 toggleBtn.Parent = screenGui
-
 local btnCorner = Instance.new("UICorner")
 btnCorner.CornerRadius = UDim.new(0, 10)
 btnCorner.Parent = toggleBtn
-
 local btnStroke = Instance.new("UIStroke")
 btnStroke.Color = theme.Border
 btnStroke.Thickness = 2
@@ -42,98 +39,180 @@ btnStroke.Parent = toggleBtn
 
 -- 2. ANA ÇERÇEVE
 local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 260, 0, 380)
-mainFrame.Position = UDim2.new(0.5, -130, 0.5, -190)
+mainFrame.Size = UDim2.new(0, 280, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -140, 0.5, -200)
 mainFrame.BackgroundColor3 = theme.MainBg
-mainFrame.BorderSizePixel = 2
-mainFrame.BorderColor3 = theme.Border
+mainFrame.BorderSizePixel = 0
 mainFrame.Visible = true
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
-
 local mainCorner = Instance.new("UICorner")
 mainCorner.Parent = mainFrame
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = theme.Border
+mainStroke.Thickness = 2
+mainStroke.Parent = mainFrame
 
--- Aç/Kapat Mantığı
 toggleBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
 end)
 
 -- 3. BAŞLIK
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
+title.Size = UDim2.new(1, 0, 0, 45)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 title.Text = "MENUFİY HUB"
 title.TextColor3 = theme.TextMain
-title.TextSize = 20
+title.TextSize = 22
 title.Parent = mainFrame
 
--- 4. ÖZELLİKLER LİSTESİ
+-- 4. SCROLLING LIST
 local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, -20, 1, -60)
-scroll.Position = UDim2.new(0, 10, 0, 50)
+scroll.Size = UDim2.new(1, -20, 1, -65)
+scroll.Position = UDim2.new(0, 10, 0, 55)
 scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 0, 450)
-scroll.ScrollBarThickness = 3
+scroll.CanvasSize = UDim2.new(0, 0, 0, 500)
+scroll.ScrollBarThickness = 2
 scroll.Parent = mainFrame
-
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 5)
+layout.Padding = UDim.new(0, 8)
 layout.Parent = scroll
 
--- BUTON OLUŞTURMA FONKSİYONU
-local function addBtn(name, callback)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.new(1, -5, 0, 35)
-    b.BackgroundColor3 = theme.ButtonDefault
-    b.Font = Enum.Font.GothamMedium
-    b.Text = name
-    b.TextColor3 = theme.TextMain
-    b.TextSize = 14
-    b.Parent = scroll
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = b
-    
-    local toggled = false
-    b.MouseButton1Click:Connect(function()
-        toggled = not toggled
-        b.BackgroundColor3 = toggled and theme.ButtonActive or theme.ButtonDefault
-        if callback then callback(toggled) end
+-- GÜÇLÜ HIZ AYARI (SPEED SLIDER) SİSTEMİ
+local speedValue = 16
+local speedEnabled = false
+
+local function createSpeedFeature()
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -5, 0, 40) -- Başlangıçta sadece buton boyu
+    container.BackgroundTransparency = 1
+    container.ClipsDescendants = true
+    container.Parent = scroll
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = theme.ButtonDefault
+    btn.Text = "Speed Boost"
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextColor3 = theme.TextMain
+    btn.TextSize = 14
+    btn.Parent = container
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = UDim2.new(1, 0, 0, 40)
+    sliderFrame.Position = UDim2.new(0, 0, 0, 40)
+    sliderFrame.BackgroundColor3 = theme.SliderBg
+    sliderFrame.BackgroundTransparency = 0.5
+    sliderFrame.Parent = container
+    Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0.8, 0, 0, 6)
+    bar.Position = UDim2.new(0.1, 0, 0.6, 0)
+    bar.BackgroundColor3 = theme.ButtonDefault
+    bar.Parent = sliderFrame
+    Instance.new("UICorner", bar)
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(0.1, 0, 1, 0)
+    fill.BackgroundColor3 = theme.ButtonActive
+    fill.Parent = bar
+    Instance.new("UICorner", fill)
+
+    local valLabel = Instance.new("TextLabel")
+    valLabel.Size = UDim2.new(1, 0, 0, 20)
+    valLabel.BackgroundTransparency = 1
+    valLabel.Text = "Speed: 16"
+    valLabel.TextColor3 = theme.TextMain
+    valLabel.Font = Enum.Font.Gotham
+    valLabel.TextSize = 12
+    valLabel.Parent = sliderFrame
+
+    -- Mantık
+    btn.MouseButton1Click:Connect(function()
+        speedEnabled = not speedEnabled
+        btn.BackgroundColor3 = speedEnabled and theme.ButtonActive or theme.ButtonDefault
+        
+        -- Alt paneli aç/kapat
+        if speedEnabled then
+            container.Size = UDim2.new(1, -5, 0, 85)
+        else
+            container.Size = UDim2.new(1, -5, 0, 40)
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.WalkSpeed = 16
+            end
+        end
+    end)
+
+    -- Slider Sürükleme
+    local dragging = false
+    local function updateSlider()
+        local mousePos = UserInputService:GetMouseLocation().X
+        local barPos = bar.AbsolutePosition.X
+        local barSize = bar.AbsoluteSize.X
+        local percent = math.clamp((mousePos - barPos) / barSize, 0, 1)
+        
+        fill.Size = UDim2.new(percent, 0, 1, 0)
+        speedValue = math.floor(16 + (percent * 184)) -- 16 ile 200 arası hız
+        valLabel.Text = "Speed: " .. tostring(speedValue)
+        
+        if speedEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = speedValue
+        end
+    end
+
+    bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider() end
     end)
 end
 
--- ==========================================
--- ÖZELLİKLER
--- ==========================================
+-- ÖZELLİKLERİ EKLE
+createSpeedFeature()
 
--- INFINITY JUMP MANTIĞI
+-- Infinity Jump (Önceki mantık)
 local infJumpEnabled = false
-UserInputService.JumpRequest:Connect(function()
-    if infJumpEnabled then
-        local char = player.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.Velocity = Vector3.new(hrp.Velocity.X, 50, hrp.Velocity.Z)
-        end
+local function addInfJump()
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -5, 0, 35)
+    b.BackgroundColor3 = theme.ButtonDefault
+    b.Text = "Infinity Jump"
+    b.Font = Enum.Font.GothamMedium
+    b.TextColor3 = theme.TextMain
+    b.TextSize = 14
+    b.Parent = scroll
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+    b.MouseButton1Click:Connect(function()
+        infJumpEnabled = not infJumpEnabled
+        b.BackgroundColor3 = infJumpEnabled and theme.ButtonActive or theme.ButtonDefault
+    end)
+end
+
+addInfJump()
+
+-- Arka Plan Döngüsü (Hızı korumak için)
+game:GetService("RunService").Heartbeat:Connect(function()
+    if speedEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = speedValue
     end
 end)
 
--- BUTONLAR
-addBtn("Infinity Jump", function(v)
-    infJumpEnabled = v
+-- Inf Jump Event
+UserInputService.JumpRequest:Connect(function()
+    if infJumpEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.Velocity = Vector3.new(player.Character.HumanoidRootPart.Velocity.X, 50, player.Character.HumanoidRootPart.Velocity.Z)
+    end
 end)
 
-addBtn("Speed Boost", function(v) 
-    player.Character.Humanoid.WalkSpeed = v and 60 or 16 
-end)
-
-addBtn("Auto Steal", function(v) print("Steal:", v) end)
-addBtn("Galaxy Mode", function(v) print("Galaxy:", v) end)
-addBtn("Anti Ragdoll", function(v) print("AntiRag:", v) end)
-
-print("Menufiy Hub: Infinity Jump eklendi!")
+print("Menufiy Hub: Dinamik Hız Ayarı Yüklendi!")
