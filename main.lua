@@ -142,7 +142,7 @@ UserInputService.InputEnded:Connect(function(input) if input.UserInputType == En
 UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
 
 addBtn("Infinity Jump", 2, function(v) infJumpEnabled = v end)
-addBtn("Auto Steal (Brainrot)", 3, function(v) autoStealEnabled = v end)
+addBtn("Safe Auto Steal", 3, function(v) autoStealEnabled = v end)
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(1, -5, 0, 35)
@@ -164,13 +164,25 @@ RunService.Stepped:Connect(function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = speedBoosted and boostSpeed or 16
     end
-    if autoStealEnabled then
+    
+    if autoStealEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local myPos = player.Character.HumanoidRootPart.Position
         for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ProximityPrompt") and (v.Parent.Name:lower():find("brainrot") or v.ObjectText:lower():find("brainrot")) then
-                fireproximityprompt(v)
-            elseif v:IsA("TouchTransmitter") and v.Parent.Name:lower():find("brainrot") then
-                firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 0)
-                firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 1)
+            if v:IsA("ProximityPrompt") then
+                local dist = (v.Parent:IsA("Model") and v.Parent.PrimaryPart and (v.Parent.PrimaryPart.Position - myPos).Magnitude) or (v.Parent:IsA("BasePart") and (v.Parent.Position - myPos).Magnitude) or 100
+                if dist < 12 then -- Sadece 12 birim yanındakileri al
+                    if v.Parent.Name:lower():find("brainrot") or v.ObjectText:lower():find("brainrot") or v.ActionText:lower():find("brainrot") then
+                        fireproximityprompt(v)
+                    end
+                end
+            elseif v:IsA("TouchTransmitter") then
+                local part = v.Parent
+                if part:IsA("BasePart") and (part.Position - myPos).Magnitude < 12 then
+                    if part.Name:lower():find("brainrot") then
+                        firetouchinterest(player.Character.HumanoidRootPart, part, 0)
+                        firetouchinterest(player.Character.HumanoidRootPart, part, 1)
+                    end
+                end
             end
         end
     end
