@@ -2,7 +2,6 @@ local player = game.Players.LocalPlayer
 local coreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 
 if coreGui:FindFirstChild("MenufiyHub_UI") then
     coreGui.MenufiyHub_UI:Destroy()
@@ -82,8 +81,6 @@ local speedBoosted = false
 local boostSpeed = 16
 local originalWalkSpeed = 16
 local infJumpEnabled = false
-local lastUpdate = 0
-local updateCooldown = 0.1
 
 local function createSpeedFeature()
     local container = Instance.new("Frame")
@@ -138,7 +135,7 @@ local function createSpeedFeature()
     local function updateSlider(input)
         local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
         fill.Size = UDim2.new(pos, 0, 1, 0)
-        boostSpeed = math.floor(16 + (pos * 184))
+        boostSpeed = math.floor(16 + (pos * 234))
         valLabel.Text = "Hiz: " .. tostring(boostSpeed)
     end
     bar.InputBegan:Connect(function(input)
@@ -194,16 +191,14 @@ createSpeedFeature()
 addInfJump()
 addUnload()
 
-RunService.Heartbeat:Connect(function(deltaTime)
-    lastUpdate = lastUpdate + deltaTime
-    if lastUpdate >= updateCooldown then
-        lastUpdate = 0
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            local humanoid = player.Character.Humanoid
-            if speedBoosted then
-                humanoid.WalkSpeed = boostSpeed
-            else
-                humanoid.WalkSpeed = originalWalkSpeed
+RunService.Stepped:Connect(function()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        local hum = player.Character.Humanoid
+        if speedBoosted then
+            hum.WalkSpeed = boostSpeed
+        else
+            if hum.WalkSpeed ~= originalWalkSpeed then
+                hum.WalkSpeed = originalWalkSpeed
             end
         end
     end
